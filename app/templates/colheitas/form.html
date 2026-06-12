@@ -7,49 +7,34 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-7">
+  <div class="col-md-9">
     <div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
       <div class="card-header bg-white fw-semibold border-0">
         <i class="bi bi-basket-fill text-primary"></i>
         {% if colheita %}Editar Colheita{% else %}Registrar Colheita{% endif %}
       </div>
       <div class="card-body">
-        <form method="POST">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Talhão <span class="text-danger">*</span></label>
-            <select name="talhao_id" class="form-select" required>
-              <option value="">Selecione o talhão...</option>
-              {% for t in talhoes %}
-              <option value="{{ t.id }}" {% if talhao_id_selecionado == t.id %}selected{% endif %}>
-                {{ t.propriedade.nome }} — {{ t.nome }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Data da Colheita <span class="text-danger">*</span></label>
-            <input type="date" name="data_colheita" class="form-control" required
-                   value="{{ colheita.data_colheita.strftime('%Y-%m-%d') if colheita else (now.strftime('%Y-%m-%d') if now else '') }}">
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Quantidade (caixas)</label>
-              <input type="number" name="quantidade_caixas" class="form-control" min="0" step="1"
-                     value="{{ colheita.quantidade_caixas if colheita and colheita.quantidade_caixas is not none else '' }}">
+        <form method="POST" id="form-colheita">
+
+          {# Dados gerais #}
+          <div class="row mb-3">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <label class="form-label fw-semibold">Talhão <span class="text-danger">*</span></label>
+              <select name="talhao_id" class="form-select" id="sel-talhao" required>
+                <option value="">Selecione o talhão...</option>
+                {% for t in talhoes %}
+                <option value="{{ t.id }}" {% if talhao_id_selecionado == t.id %}selected{% endif %}>
+                  {{ t.propriedade.nome }} — {{ t.nome }}
+                </option>
+                {% endfor %}
+              </select>
             </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Peso por Caixa (kg)</label>
-              <input type="number" name="peso_por_caixa" class="form-control" step="0.1" min="0"
-                     value="{{ colheita.peso_por_caixa | numero_input if colheita and colheita.peso_por_caixa is not none else '' }}">
+            <div class="col-md-3 mb-3 mb-md-0">
+              <label class="form-label fw-semibold">Data <span class="text-danger">*</span></label>
+              <input type="date" name="data_colheita" class="form-control" required
+                     value="{{ colheita.data_colheita.strftime('%Y-%m-%d') if colheita else (now.strftime('%Y-%m-%d') if now else '') }}">
             </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Preço por Caixa (R$)</label>
-              <input type="number" name="preco_por_caixa" class="form-control" step="0.01" min="0"
-                     value="{{ colheita.preco_por_caixa | numero_input if colheita and colheita.preco_por_caixa is not none else '' }}">
-            </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-3">
               <label class="form-label fw-semibold">Destino</label>
               <select name="destino" class="form-select">
                 <option value="">Selecione...</option>
@@ -59,10 +44,53 @@
               </select>
             </div>
           </div>
+
+          {# Itens por variedade #}
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label fw-semibold mb-0">
+                <i class="bi bi-list-ul text-success"></i> Itens da Colheita
+              </label>
+              <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarLinha()">
+                <i class="bi bi-plus-circle"></i> Adicionar variedade
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-bordered align-middle mb-0" id="tabela-itens">
+                <thead class="table-light">
+                  <tr>
+                    <th>Variedade <span class="text-danger">*</span></th>
+                    <th class="text-end" style="width:120px">Caixas <span class="text-danger">*</span></th>
+                    <th class="text-end" style="width:120px">Kg/caixa</th>
+                    <th class="text-end" style="width:130px">R$/caixa</th>
+                    <th style="width:48px"></th>
+                  </tr>
+                </thead>
+                <tbody id="itens-body">
+                  {# Preenchido pelo JS abaixo #}
+                </tbody>
+                <tfoot>
+                  <tr class="table-light fw-semibold" id="linha-totais" style="display:none">
+                    <td>Total</td>
+                    <td class="text-end" id="total-caixas">—</td>
+                    <td class="text-end" id="total-kg">—</td>
+                    <td class="text-end" id="total-receita">—</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div id="aviso-sem-item" class="text-muted small mt-2" style="display:none">
+              Selecione um talhão para ver as variedades disponíveis.
+            </div>
+          </div>
+
           <div class="alert alert-info small no-print">
             <i class="bi bi-info-circle"></i>
-            Peso total = Quantidade × Peso por caixa &nbsp;|&nbsp; Receita = Quantidade × Preço por caixa.
+            Peso total = Quantidade × Kg/caixa &nbsp;|&nbsp; Receita = Quantidade × R$/caixa
           </div>
+
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Salvar</button>
             <a href="{{ url_for('colheitas.index') }}" class="btn btn-outline-secondary">Cancelar</a>
@@ -72,4 +100,122 @@
     </div>
   </div>
 </div>
+
+<script>
+// Dados do servidor
+const TALHAO_VARIEDADES = {{ talhao_variedades | safe }};
+const TODAS_VARIEDADES = {{ variedades_all | tojson }};
+
+// Itens existentes (edição)
+const ITENS_EXISTENTES = {{ itens_existentes | tojson }};
+
+function _opt(variedade, selecionada) {
+  const opts = TODAS_VARIEDADES.map(v =>
+    `<option value="${v}"${v === selecionada ? ' selected' : ''}>${v}</option>`
+  ).join('');
+  return opts;
+}
+
+function adicionarLinha(variedade='', qtd='', peso='', preco='') {
+  const tbody = document.getElementById('itens-body');
+  const tid = parseInt(document.getElementById('sel-talhao').value) || 0;
+  const vars = tid && TALHAO_VARIEDADES[tid] ? TALHAO_VARIEDADES[tid] : TODAS_VARIEDADES;
+
+  // Monta opções restritas às variedades do talhão
+  const opts = vars.map(v =>
+    `<option value="${v}"${v === variedade ? ' selected' : ''}>${v}</option>`
+  ).join('');
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select name="variedade" class="form-select form-select-sm" required onchange="atualizarTotais()">
+        <option value="">Selecione...</option>
+        ${opts}
+      </select>
+    </td>
+    <td>
+      <input type="number" name="quantidade_caixas" class="form-control form-control-sm text-end"
+             min="0" step="1" value="${qtd}" placeholder="0" oninput="atualizarTotais()">
+    </td>
+    <td>
+      <input type="number" name="peso_por_caixa" class="form-control form-control-sm text-end"
+             min="0" step="0.1" value="${peso}" placeholder="0,0" oninput="atualizarTotais()">
+    </td>
+    <td>
+      <input type="number" name="preco_por_caixa" class="form-control form-control-sm text-end"
+             min="0" step="0.01" value="${preco}" placeholder="0,00" oninput="atualizarTotais()">
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  atualizarTotais();
+}
+
+function removerLinha(btn) {
+  btn.closest('tr').remove();
+  atualizarTotais();
+}
+
+function atualizarTotais() {
+  const tbody = document.getElementById('itens-body');
+  const linhas = tbody.querySelectorAll('tr');
+  let totalCaixas = 0, totalKg = 0, totalReceita = 0;
+
+  linhas.forEach(tr => {
+    const qtd = parseFloat(tr.querySelector('[name=quantidade_caixas]').value) || 0;
+    const peso = parseFloat(tr.querySelector('[name=peso_por_caixa]').value) || 0;
+    const preco = parseFloat(tr.querySelector('[name=preco_por_caixa]').value) || 0;
+    totalCaixas += qtd;
+    totalKg += qtd * peso;
+    totalReceita += qtd * preco;
+  });
+
+  const rodape = document.getElementById('linha-totais');
+  if (linhas.length > 1) {
+    rodape.style.display = '';
+    document.getElementById('total-caixas').textContent = totalCaixas.toFixed(0);
+    document.getElementById('total-kg').textContent = totalKg.toFixed(1) + ' kg';
+    document.getElementById('total-receita').textContent = 'R$ ' + totalReceita.toFixed(2).replace('.', ',');
+  } else {
+    rodape.style.display = 'none';
+  }
+}
+
+function popularItensDeTalhao(tid) {
+  const tbody = document.getElementById('itens-body');
+  tbody.innerHTML = '';
+
+  const vars = tid && TALHAO_VARIEDADES[tid] ? TALHAO_VARIEDADES[tid] : [];
+  if (vars.length > 0) {
+    vars.forEach(v => adicionarLinha(v));
+  } else {
+    adicionarLinha();
+  }
+  atualizarTotais();
+}
+
+// Ao trocar o talhão: repopula os itens (somente em cadastro novo)
+document.getElementById('sel-talhao').addEventListener('change', function() {
+  const isNovo = {{ 'true' if not colheita else 'false' }};
+  if (isNovo) {
+    popularItensDeTalhao(parseInt(this.value) || 0);
+  }
+});
+
+// Inicialização
+(function init() {
+  if (ITENS_EXISTENTES.length > 0) {
+    // Edição: carrega itens já salvos
+    ITENS_EXISTENTES.forEach(i => adicionarLinha(i.variedade, i.quantidade_caixas, i.peso_por_caixa || '', i.preco_por_caixa || ''));
+  } else {
+    const tid = parseInt(document.getElementById('sel-talhao').value) || 0;
+    popularItensDeTalhao(tid);
+  }
+})();
+</script>
 {% endblock %}

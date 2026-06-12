@@ -14,23 +14,37 @@
     <div class="table-responsive">
       <table class="table table-hover mb-0">
         <thead class="table-light">
-          <tr><th>Data</th><th>Talhão</th><th class="text-end">Caixas</th><th class="text-end">Kg/cx</th><th class="text-end">Peso Total</th><th class="text-end">Preço/cx</th><th class="text-end">Receita</th><th>Destino</th><th></th></tr>
+          <tr>
+            <th>Data</th>
+            <th>Talhão</th>
+            <th>Variedades</th>
+            <th class="text-end">Total Caixas</th>
+            <th class="text-end">Peso Total</th>
+            <th class="text-end">Receita</th>
+            <th>Destino</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {% for c in colheitas %}
           <tr>
             <td>{{ c.data_colheita.strftime('%d/%m/%Y') }}</td>
             <td><a href="{{ url_for('talhoes.detalhe', id=c.talhao.id) }}">{{ c.talhao.nome }}</a></td>
-            <td class="text-end">{{ c.quantidade_caixas or '—' }}</td>
-            <td class="text-end">{{ c.peso_por_caixa|numero if c.peso_por_caixa else '—' }}</td>
-            <td class="text-end">{{ c.peso_total|numero if c.peso_total else '—' }}</td>
-            <td class="text-end">{{ c.preco_por_caixa|moeda if c.preco_por_caixa else '—' }}</td>
+            <td>
+              {% for item in c.itens %}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-1">
+                  {{ item.variedade }}: {{ item.quantidade_caixas }} cx
+                </span>
+              {% endfor %}
+            </td>
+            <td class="text-end fw-semibold">{{ c.quantidade_caixas }}</td>
+            <td class="text-end">{{ c.peso_total|numero if c.peso_total else '—' }} kg</td>
             <td class="text-end fw-semibold text-success">{{ c.receita_total|moeda }}</td>
             <td>{{ c.destino or '—' }}</td>
             <td><a href="{{ url_for('colheitas.editar', id=c.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
           </tr>
           {% else %}
-          <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma colheita registrada.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma colheita registrada.</td></tr>
           {% endfor %}
         </tbody>
       </table>

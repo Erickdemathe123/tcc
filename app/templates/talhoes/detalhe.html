@@ -278,15 +278,20 @@
     </div>
     <div class="table-responsive">
       <table class="table table-hover">
-        <thead class="table-light"><tr><th>Data</th><th class="text-end">Caixas</th><th class="text-end">Kg/cx</th><th class="text-end">Peso Total</th><th class="text-end">Preço/cx</th><th class="text-end">Receita</th><th>Destino</th><th></th></tr></thead>
+        <thead class="table-light"><tr><th>Data</th><th>Variedades</th><th class="text-end">Total cx</th><th class="text-end">Peso Total</th><th class="text-end">Receita</th><th>Destino</th><th></th></tr></thead>
         <tbody>
           {% for c in talhao.colheitas|sort(attribute='data_colheita', reverse=True) %}
           <tr>
             <td>{{ c.data_colheita.strftime('%d/%m/%Y') }}</td>
-            <td class="text-end">{{ c.quantidade_caixas or '—' }}</td>
-            <td class="text-end">{{ c.peso_por_caixa|numero if c.peso_por_caixa else '—' }}</td>
-            <td class="text-end">{{ c.peso_total|numero if c.peso_total else '—' }}</td>
-            <td class="text-end">{{ c.preco_por_caixa|moeda if c.preco_por_caixa else '—' }}</td>
+            <td>
+              {% for item in c.itens %}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle me-1">
+                  {{ item.variedade }}: {{ item.quantidade_caixas }} cx
+                </span>
+              {% endfor %}
+            </td>
+            <td class="text-end fw-semibold">{{ c.quantidade_caixas }}</td>
+            <td class="text-end">{{ c.peso_total|numero if c.peso_total else '—' }} kg</td>
             <td class="text-end fw-semibold text-success">{{ c.receita_total|moeda }}</td>
             <td>{{ c.destino or '—' }}</td>
             <td>
@@ -300,7 +305,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="8" class="text-center text-muted py-3">Nenhuma colheita registrada.</td></tr>
+          <tr><td colspan="7" class="text-center text-muted py-3">Nenhuma colheita registrada.</td></tr>
           {% endfor %}
         </tbody>
       </table>
