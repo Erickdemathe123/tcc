@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}{% if manejo %}Editar Manejo{% else %}Registrar Manejo{% endif %}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('manejos.index') }}" class="text-muted text-decoration-none">Manejos</a> /
+  {% if manejo %}Editar{% else %}Novo{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-tools text-success"></i>
+        {% if manejo %}Editar Manejo Agrícola{% else %}Registrar Manejo Agrícola{% endif %}
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Talhão <span class="text-danger">*</span></label>
+            <select name="talhao_id" class="form-select" required>
+              <option value="">Selecione o talhão...</option>
+              {% for t in talhoes %}
+              <option value="{{ t.id }}" {% if talhao_id_selecionado == t.id %}selected{% endif %}>
+                {{ t.propriedade.nome }} — {{ t.nome }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Tipo de Manejo <span class="text-danger">*</span></label>
+              <select name="tipo" class="form-select" required>
+                <option value="">Selecione...</option>
+                {% for t in tipos %}
+                <option value="{{ t }}" {% if manejo and manejo.tipo == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Data <span class="text-danger">*</span></label>
+              <input type="date" name="data_manejo" class="form-control" required
+                     value="{{ manejo.data_manejo.strftime('%Y-%m-%d') if manejo else (now.strftime('%Y-%m-%d') if now else '') }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Responsável</label>
+            <input type="text" name="responsavel" class="form-control" placeholder="Nome do responsável"
+                   value="{{ manejo.responsavel or '' if manejo else '' }}">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Descrição / Observações</label>
+            <textarea name="descricao" class="form-control" rows="3"
+                      placeholder="Detalhes do manejo realizado...">{{ manejo.descricao or '' if manejo else '' }}</textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Salvar</button>
+            <a href="{{ url_for('manejos.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

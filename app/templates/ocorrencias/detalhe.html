@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Recomendação — {{ ocorrencia.nome }}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('ocorrencias.index') }}" class="text-muted text-decoration-none">Ocorrências</a> /
+  {{ ocorrencia.nome }}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+
+    <!-- Cabeçalho da ocorrência -->
+    <div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h5 class="fw-bold mb-1">
+              <i class="bi bi-bug-fill text-danger"></i> {{ ocorrencia.nome }}
+            </h5>
+            <div class="text-muted small">
+              {{ ocorrencia.talhao.propriedade.nome }} — {{ ocorrencia.talhao.nome }} ·
+              {{ ocorrencia.data_ocorrencia.strftime('%d/%m/%Y') }} ·
+              {{ ocorrencia.tipo }}
+            </div>
+          </div>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="badge fs-6
+              {% if ocorrencia.severidade == 'Grave' %}bg-danger
+              {% elif ocorrencia.severidade == 'Moderada' %}bg-warning text-dark
+              {% else %}bg-success{% endif %}">
+              {{ ocorrencia.severidade }}
+            </span>
+            <a href="{{ url_for('ocorrencias.editar', id=ocorrencia.id) }}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i> Editar
+            </a>
+          </div>
+        </div>
+        {% if ocorrencia.tratamento_aplicado %}
+        <div class="mt-3 p-2 bg-light rounded small">
+          <strong>Tratamento registrado:</strong> {{ ocorrencia.tratamento_aplicado }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sobre a praga/doença -->
+    <div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-info-circle-fill text-primary"></i> Sobre esta {{ recomendacao.tipo }}
+      </div>
+      <div class="card-body">
+        <div class="mb-1"><span class="text-muted small">Agente causador:</span> <strong>{{ recomendacao.agente }}</strong></div>
+        <p class="mb-0 small">{{ recomendacao.descricao }}</p>
+      </div>
+    </div>
+
+    <!-- Recomendação para a severidade atual -->
+    <div class="card mb-3 border-0"
+      style="box-shadow:0 1px 4px rgba(0,0,0,.08);
+        {% if ocorrencia.severidade == 'Grave' %}border-left: 4px solid #dc3545 !important;
+        {% elif ocorrencia.severidade == 'Moderada' %}border-left: 4px solid #ffc107 !important;
+        {% else %}border-left: 4px solid #198754 !important;{% endif %}">
+      <div class="card-header border-0 fw-semibold
+        {% if ocorrencia.severidade == 'Grave' %}bg-danger bg-opacity-10 text-danger
+        {% elif ocorrencia.severidade == 'Moderada' %}bg-warning bg-opacity-10 text-warning
+        {% else %}bg-success bg-opacity-10 text-success{% endif %}">
+        <i class="bi
+          {% if ocorrencia.severidade == 'Grave' %}bi-exclamation-triangle-fill
+          {% elif ocorrencia.severidade == 'Moderada' %}bi-exclamation-circle-fill
+          {% else %}bi-check-circle-fill{% endif %}"></i>
+        Ações recomendadas — Severidade {{ ocorrencia.severidade }}
+      </div>
+      <div class="card-body">
+        <ol class="mb-0">
+          {% for acao in recomendacao[ocorrencia.severidade] %}
+          <li class="mb-2">{{ acao }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+
+    <!-- Prevenção -->
+    <div class="card mb-4" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-shield-check-fill text-success"></i> Como prevenir
+      </div>
+      <div class="card-body">
+        <ul class="mb-0">
+          {% for dica in recomendacao.prevencao %}
+          <li class="mb-1 small">{{ dica }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <a href="{{ url_for('talhoes.detalhe', id=ocorrencia.talhao_id) }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Voltar ao Talhão
+    </a>
+
+  </div>
+</div>
+{% endblock %}

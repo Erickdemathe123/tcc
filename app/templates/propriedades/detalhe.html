@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ propriedade.nome }}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('propriedades.index') }}" class="text-muted text-decoration-none">Propriedades</a> /
+  {{ propriedade.nome }}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="fw-bold mb-0">{{ propriedade.nome }}</h4>
+    <small class="text-muted">{{ propriedade.produtor_nome }}</small>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('dashboard.painel', propriedade_id=propriedade.id) }}" class="btn btn-success btn-sm">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+    <a href="{{ url_for('talhoes.novo') }}?propriedade_id={{ propriedade.id }}" class="btn btn-outline-success btn-sm">
+      <i class="bi bi-plus"></i> Novo Talhão
+    </a>
+    <a href="{{ url_for('propriedades.editar', id=propriedade.id) }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-pencil"></i> Editar
+    </a>
+    <form method="POST" action="{{ url_for('propriedades.excluir', id=propriedade.id) }}"
+          onsubmit="return confirm('Excluir propriedade e todos os dados vinculados?')">
+      <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+    </form>
+  </div>
+</div>
+
+<!-- Info básica -->
+<div class="row g-3 mb-4">
+  {% if propriedade.localizacao %}
+  <div class="col-auto">
+    <span class="text-muted"><i class="bi bi-geo-alt"></i> {{ propriedade.localizacao }}</span>
+  </div>
+  {% endif %}
+  {% if propriedade.area_total_ha %}
+  <div class="col-auto">
+    <span class="text-muted"><i class="bi bi-rulers"></i> {{ propriedade.area_total_ha|numero }} ha</span>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Talhões -->
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0 d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-grid-fill text-success"></i> Talhões ({{ propriedade.talhoes|length }})</span>
+    <a href="{{ url_for('talhoes.novo') }}?propriedade_id={{ propriedade.id }}" class="btn btn-success btn-sm">
+      <i class="bi bi-plus"></i> Novo
+    </a>
+  </div>
+  <div class="card-body p-0">
+    {% if propriedade.talhoes %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nome</th>
+            <th>Variedade</th>
+            <th class="text-end">Área (ha)</th>
+            <th>Plantio</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in propriedade.talhoes %}
+          <tr>
+            <td class="fw-semibold">{{ t.nome }}</td>
+            <td>{{ t.variedade or '—' }}</td>
+            <td class="text-end">{{ t.area_ha|numero }}</td>
+            <td>{{ t.data_plantio.strftime('%d/%m/%Y') if t.data_plantio else '—' }}</td>
+            <td>
+              <a href="{{ url_for('talhoes.detalhe', id=t.id) }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-eye"></i> Ver
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-4">
+      Nenhum talhão cadastrado.
+      <a href="{{ url_for('talhoes.novo') }}?propriedade_id={{ propriedade.id }}">Cadastrar agora</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

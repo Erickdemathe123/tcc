@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% block title %}Relatório — {{ talhao.nome }}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('relatorios.index') }}" class="text-muted text-decoration-none">Relatórios</a> / {{ talhao.nome }}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <h4 class="fw-bold mb-0">Relatório do Talhão</h4>
+  <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-printer"></i> Imprimir
+  </button>
+</div>
+
+<!-- Cabeçalho do relatório -->
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h5 class="fw-bold mb-0">{{ talhao.nome }}</h5>
+        <p class="text-muted mb-0">
+          {{ talhao.propriedade.nome }} · {{ talhao.propriedade.produtor_nome }}
+          {% if talhao.variedade %} · Variedade: {{ talhao.variedade }}{% endif %}
+        </p>
+        <p class="text-muted small mb-0">
+          Área: {{ talhao.area_ha|numero }} ha
+          {% if talhao.data_plantio %} · Plantio: {{ talhao.data_plantio.strftime('%d/%m/%Y') }}{% endif %}
+        </p>
+      </div>
+      <div class="text-end text-muted small">
+        <div>Gerado em: {{ data_geracao.strftime('%d/%m/%Y') }}</div>
+        <span class="badge badge-{{ diagnostico.cor }} mt-1">
+          <i class="bi {{ diagnostico.icone }}"></i> Situação: {{ diagnostico.label }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Indicadores principais -->
+<div class="row g-3 mb-3">
+  <div class="col-md-3 col-6">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Produção Total</div>
+        <div class="valor text-success">{{ indicadores.total_caixas }}</div>
+        <div class="text-muted small">caixas</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Produtividade</div>
+        <div class="valor text-primary">{{ indicadores.produtividade_caixas_ha|numero }}</div>
+        <div class="text-muted small">cx/ha</div>
+        {% if media_propriedade > 0 and indicadores.total_caixas > 0 %}
+          {% set diff = indicadores.produtividade_caixas_ha - media_propriedade %}
+          {% if diff > 0 %}
+            <div class="text-success small mt-1">
+              <i class="bi bi-arrow-up"></i> {{ diff|numero }} cx/ha acima da média
+            </div>
+          {% elif diff < 0 %}
+            <div class="text-danger small mt-1">
+              <i class="bi bi-arrow-down"></i> {{ (diff * -1)|numero }} cx/ha abaixo da média
+            </div>
+          {% else %}
+            <div class="text-muted small mt-1">Na média da propriedade</div>
+          {% endif %}
+          <div class="text-muted" style="font-size:.75rem;">Média: {{ media_propriedade|numero }} cx/ha</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Custo Total</div>
+        <div class="valor text-danger">{{ indicadores.custo_total|moeda }}</div>
+        <div class="text-muted small">{{ indicadores.custo_por_ha|moeda }}/ha</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Lucro Estimado</div>
+        <div class="valor {% if indicadores.lucro_estimado >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {{ indicadores.lucro_estimado|moeda }}
+        </div>
+        <div class="text-muted small">
+          {% if indicadores.custo_total > 0 and indicadores.receita_total > 0 %}
+            {{ indicadores.custo_por_caixa|moeda }}/cx
+          {% else %}—{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diagnóstico detalhado -->
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-clipboard2-pulse"></i> Diagnóstico Agronômico
+  </div>
+  <div class="card-body">
+    <div class="row">
+      {% for tipo, texto in diagnostico.motivos %}
+      <div class="col-md-6 mb-2">
+        <div class="d-flex align-items-start gap-2">
+          {% if tipo == 'positivo' %}
+            <i class="bi bi-check-circle-fill motivo-positivo mt-1"></i>
+          {% elif tipo == 'atencao' %}
+            <i class="bi bi-exclamation-circle-fill motivo-atencao mt-1"></i>
+          {% else %}
+            <i class="bi bi-x-circle-fill motivo-negativo mt-1"></i>
+          {% endif %}
+          <span class="small motivo-{{ tipo }}">{{ texto }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="mt-3 p-3 rounded
+      {% if diagnostico.situacao == 'normal' %}bg-success bg-opacity-10
+      {% elif diagnostico.situacao == 'atencao' %}bg-warning bg-opacity-10
+      {% else %}bg-danger bg-opacity-10{% endif %}">
+      <strong>Situação geral:</strong>
+      {% if diagnostico.situacao == 'normal' %}
+        O talhão apresenta bom desempenho. Mantenha as práticas de manejo e monitoramento.
+      {% elif diagnostico.situacao == 'atencao' %}
+        O talhão requer atenção. Verifique os pontos indicados e adote medidas corretivas.
+      {% else %}
+        O talhão está em situação crítica. Intervenção imediata é recomendada.
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Alertas -->
+{% if alertas %}
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-bell-fill text-warning"></i> Alertas Ativos ({{ alertas|length }})
+  </div>
+  <div class="card-body">
+    {% for a in alertas %}
+    <div class="alerta-item {{ a.tipo }}">
+      <div class="fw-semibold small"><i class="bi {{ a.icone }}"></i> {{ a.titulo }}</div>
+      <div class="small">{{ a.mensagem }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Histórico de produção e custos mensais -->
+{% if hist_producao or hist_custos %}
+<div class="row g-3 mb-3">
+  {% if hist_producao %}
+  <div class="col-md-{% if hist_custos %}6{% else %}12{% endif %}">
+    <div class="card h-100" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-graph-up text-success"></i> Histórico de Produção por Mês
+      </div>
+      <div class="card-body">
+        <canvas id="graficoRelatorio" height="120"></canvas>
+      </div>
+      <div class="card-footer bg-white border-0">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>Mês</th><th class="text-end">Caixas</th></tr></thead>
+            <tbody>
+              {% for mes, qtd in hist_producao.items() %}
+              <tr><td>{{ mes }}</td><td class="text-end">{{ qtd }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if hist_custos %}
+  <div class="col-md-{% if hist_producao %}6{% else %}12{% endif %}">
+    <div class="card h-100" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-graph-down text-danger"></i> Evolução Mensal dos Custos
+      </div>
+      <div class="card-body">
+        <canvas id="graficoCustosRelatorio" height="120"></canvas>
+      </div>
+      <div class="card-footer bg-white border-0">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>Mês</th><th class="text-end">Custo (R$)</th></tr></thead>
+            <tbody>
+              {% for mes, val in hist_custos.items() %}
+              <tr><td>{{ mes }}</td><td class="text-end">{{ val|moeda }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Custos por categoria -->
+{% if indicadores.custo_por_categoria %}
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-cash-stack text-danger"></i> Custos por Categoria
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead><tr><th>Categoria</th><th class="text-end">Valor</th><th class="text-end">%</th></tr></thead>
+        <tbody>
+          {% for cat, val in indicadores.custo_por_categoria.items() %}
+          <tr>
+            <td>{{ cat }}</td>
+            <td class="text-end">{{ val|moeda }}</td>
+            <td class="text-end text-muted small">
+              {% if indicadores.custo_total > 0 %}
+                {{ ((val / indicadores.custo_total) * 100)|round(1) }}%
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          <tr class="fw-bold table-light">
+            <td>Total</td>
+            <td class="text-end">{{ indicadores.custo_total|moeda }}</td>
+            <td class="text-end">100%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Ocorrências -->
+{% if talhao.ocorrencias %}
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-bug-fill text-danger"></i> Ocorrências de Pragas e Doenças
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead class="table-light"><tr><th>Data</th><th>Nome</th><th>Tipo</th><th>Severidade</th><th>Área (ha)</th></tr></thead>
+        <tbody>
+          {% for o in talhao.ocorrencias|sort(attribute='data_ocorrencia', reverse=True) %}
+          <tr>
+            <td>{{ o.data_ocorrencia.strftime('%d/%m/%Y') }}</td>
+            <td>{{ o.nome }}</td>
+            <td>{{ o.tipo }}</td>
+            <td>
+              <span class="badge {% if o.severidade == 'Grave' %}bg-danger{% elif o.severidade == 'Moderada' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                {{ o.severidade }}
+              </span>
+            </td>
+            <td>{{ o.area_afetada_ha|numero if o.area_afetada_ha else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ctxProd = document.getElementById('graficoRelatorio');
+if (ctxProd) {
+  const hist = {{ hist_producao | tojson }};
+  new Chart(ctxProd, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(hist),
+      datasets: [{ label: 'Caixas', data: Object.values(hist), backgroundColor: '#40916c', borderRadius: 4 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+const ctxCustosRel = document.getElementById('graficoCustosRelatorio');
+if (ctxCustosRel) {
+  const histCustos = {{ hist_custos | tojson }};
+  new Chart(ctxCustosRel, {
+    type: 'line',
+    data: {
+      labels: Object.keys(histCustos),
+      datasets: [{
+        label: 'Custos (R$)',
+        data: Object.values(histCustos),
+        borderColor: '#dc3545',
+        backgroundColor: 'rgba(220,53,69,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
+        }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

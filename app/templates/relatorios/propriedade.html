@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %}Relatório — {{ propriedade.nome }}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('relatorios.index') }}" class="text-muted text-decoration-none">Relatórios</a> / {{ propriedade.nome }}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <h4 class="fw-bold mb-0">Relatório da Propriedade</h4>
+  <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-printer"></i> Imprimir
+  </button>
+</div>
+
+<!-- Cabeçalho -->
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body">
+    <h5 class="fw-bold mb-0">{{ propriedade.nome }}</h5>
+    <p class="text-muted mb-0">Produtor: {{ propriedade.produtor_nome }}</p>
+    {% if propriedade.localizacao %}<p class="text-muted small mb-0">{{ propriedade.localizacao }}</p>{% endif %}
+    <p class="text-muted small">Gerado em: {{ data_geracao.strftime('%d/%m/%Y') }}</p>
+  </div>
+</div>
+
+<!-- Resumo geral -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-2">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Talhões</div>
+        <div class="valor text-primary">{{ indicadores.total_talhoes }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Produção Total</div>
+        <div class="valor text-success">{{ indicadores.total_caixas }} <small>cx</small></div>
+        <div class="text-muted small">{{ indicadores.produtividade_media_ha|numero }} cx/ha</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Custo Total</div>
+        <div class="valor text-danger">{{ indicadores.total_custo|moeda }}</div>
+        {% if indicadores.custo_por_caixa > 0 %}
+        <div class="text-muted small">{{ indicadores.custo_por_caixa|moeda }}/cx</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-2">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Receita Total</div>
+        <div class="valor text-primary">{{ indicadores.total_receita|moeda }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center card-indicador h-100">
+      <div class="card-body">
+        <div class="label">Resultado Estimado</div>
+        <div class="valor {% if indicadores.lucro_total >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {{ indicadores.lucro_total|moeda }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Situação geral interpretativa -->
+{% if situacao_geral == 'critico' %}
+<div class="alert alert-danger d-flex align-items-center gap-3 mb-4 p-3" style="border-radius:.75rem;border-left:6px solid #dc3545;">
+  <i class="bi bi-x-circle-fill fs-2 flex-shrink-0"></i>
+  <div>
+    <div class="fw-bold fs-5">Situação Crítica</div>
+    <div>
+      {{ diagnosticos.critico|length }} talhão(ões) em situação crítica e {{ diagnosticos.atencao|length }} em atenção.
+      A propriedade apresenta pontos que exigem intervenção imediata.
+      {% if indicadores.lucro_total < 0 %}
+      O resultado financeiro acumulado é negativo ({{ indicadores.lucro_total|moeda }}), indicando prejuízo estimado.
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% elif situacao_geral == 'atencao' %}
+<div class="alert alert-warning d-flex align-items-center gap-3 mb-4 p-3" style="border-radius:.75rem;border-left:6px solid #ffc107;">
+  <i class="bi bi-exclamation-circle-fill fs-2 flex-shrink-0"></i>
+  <div>
+    <div class="fw-bold fs-5">Atenção Necessária</div>
+    <div>
+      {{ diagnosticos.atencao|length }} talhão(ões) requerem atenção e {{ diagnosticos.normal|length }} estão em situação normal.
+      Adote medidas preventivas para evitar agravamento.
+      {% if indicadores.lucro_total >= 0 %}
+      O resultado financeiro estimado é positivo ({{ indicadores.lucro_total|moeda }}).
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% elif situacao_geral == 'normal' %}
+<div class="alert alert-success d-flex align-items-center gap-3 mb-4 p-3" style="border-radius:.75rem;border-left:6px solid #198754;">
+  <i class="bi bi-check-circle-fill fs-2 flex-shrink-0"></i>
+  <div>
+    <div class="fw-bold fs-5">Propriedade em Situação Normal</div>
+    <div>
+      Todos os {{ diagnosticos.normal|length }} talhões estão dentro dos parâmetros esperados.
+      {% if indicadores.lucro_total > 0 %}
+      Resultado financeiro estimado: {{ indicadores.lucro_total|moeda }} positivo.
+      {% endif %}
+      Continue monitorando regularmente.
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-secondary d-flex align-items-center gap-3 mb-4 p-3" style="border-radius:.75rem;border-left:6px solid #6c757d;">
+  <i class="bi bi-info-circle-fill fs-2 flex-shrink-0"></i>
+  <div>
+    <div class="fw-bold fs-5">Dados Insuficientes</div>
+    <div>Registre manejos, colheitas e custos para ativar o diagnóstico automático.</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Resumo de situação -->
+<div class="row g-2 mb-4">
+  <div class="col-auto">
+    <span class="badge badge-normal fs-6">{{ diagnosticos.normal|length }} Normal</span>
+  </div>
+  <div class="col-auto">
+    <span class="badge badge-atencao fs-6">{{ diagnosticos.atencao|length }} Atenção</span>
+  </div>
+  <div class="col-auto">
+    <span class="badge badge-critico fs-6">{{ diagnosticos.critico|length }} Crítico</span>
+  </div>
+</div>
+
+<!-- Ranking detalhado -->
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-trophy-fill text-warning"></i> Desempenho por Talhão
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Talhão</th><th>Situação</th>
+            <th class="text-end">cx/ha</th>
+            <th class="text-end">Custo/cx</th>
+            <th class="text-end">Receita</th>
+            <th class="text-end">Custo</th>
+            <th class="text-end">Lucro Est.</th>
+            <th class="text-end">Ocorrências</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in ranking %}
+          {% set diag = item.indicadores %}
+          <tr>
+            <td class="text-muted">{{ loop.index }}</td>
+            <td class="fw-semibold">{{ item.talhao.nome }}</td>
+            <td>
+              {% set sit = 'normal' %}
+              {% for d in diagnosticos.critico %}{% if d.talhao.id == item.talhao.id %}{% set sit = 'critico' %}{% endif %}{% endfor %}
+              {% for d in diagnosticos.atencao %}{% if d.talhao.id == item.talhao.id %}{% set sit = 'atencao' %}{% endif %}{% endfor %}
+              <span class="badge badge-{{ sit }}">{{ sit|capitalize }}</span>
+            </td>
+            <td class="text-end">{{ diag.produtividade_caixas_ha|numero }}</td>
+            <td class="text-end">{{ diag.custo_por_caixa|moeda }}</td>
+            <td class="text-end text-success">{{ diag.receita_total|moeda }}</td>
+            <td class="text-end text-danger">{{ diag.custo_total|moeda }}</td>
+            <td class="text-end {% if diag.lucro_estimado >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+              {{ diag.lucro_estimado|moeda }}
+            </td>
+            <td class="text-end">{{ diag.total_ocorrencias }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Gráfico comparativo entre talhões -->
+{% if ranking|length > 1 %}
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-bar-chart-fill text-primary"></i> Comparativo Visual entre Talhões
+  </div>
+  <div class="card-body">
+    <canvas id="graficoComparativo" height="80"></canvas>
+  </div>
+</div>
+{% endif %}
+
+<!-- Pragas mais recorrentes -->
+{% if pragas %}
+<div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-bug-fill text-danger"></i> Pragas e Doenças Mais Recorrentes
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead class="table-light"><tr><th>#</th><th>Praga / Doença</th><th class="text-end">Ocorrências</th></tr></thead>
+        <tbody>
+          {% for nome, qtd in pragas %}
+          <tr>
+            <td class="text-muted">{{ loop.index }}</td>
+            <td>{{ nome }}</td>
+            <td class="text-end"><span class="badge bg-danger rounded-pill">{{ qtd }}x</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Talhões críticos e em atenção -->
+{% if diagnosticos.critico or diagnosticos.atencao %}
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-header bg-white fw-semibold border-0">
+    <i class="bi bi-exclamation-triangle-fill text-warning"></i> Talhões que Requerem Atenção
+  </div>
+  <div class="card-body">
+    {% for d in diagnosticos.critico + diagnosticos.atencao %}
+    <div class="mb-3">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge badge-{{ d.cor }}">{{ d.label }}</span>
+        <strong>{{ d.talhao.nome }}</strong>
+      </div>
+      <ul class="small mb-0 text-muted">
+        {% for tipo, texto in d.motivos if tipo in ('negativo', 'atencao') %}
+        <li class="motivo-{{ tipo }}">{{ texto }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if ranking|length > 1 %}
+<script>
+const ctxComp = document.getElementById('graficoComparativo');
+if (ctxComp) {
+  const labels = {{ ranking | map(attribute='talhao') | map(attribute='nome') | list | tojson }};
+  const prodData = {{ ranking | map(attribute='indicadores') | map(attribute='produtividade_caixas_ha') | list | tojson }};
+  const custoCxData = {{ ranking | map(attribute='indicadores') | map(attribute='custo_por_caixa') | list | tojson }};
+  const ocorrData = {{ ranking | map(attribute='indicadores') | map(attribute='total_ocorrencias') | list | tojson }};
+
+  new Chart(ctxComp, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Produtividade (cx/ha)',
+          data: prodData,
+          backgroundColor: '#40916c',
+          borderRadius: 4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Custo/caixa (R$)',
+          data: custoCxData,
+          backgroundColor: '#ffc107',
+          borderRadius: 4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Ocorrências',
+          data: ocorrData,
+          backgroundColor: '#dc3545',
+          borderRadius: 4,
+          yAxisID: 'y2',
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          title: { display: true, text: 'cx/ha  |  R$/cx' },
+        },
+        y2: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          title: { display: true, text: 'Ocorrências' },
+        }
+      }
+    }
+  });
+}
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Custos{% endblock %}
+{% block breadcrumb %}<i class="bi bi-cash-stack"></i> Custos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Custos</h4>
+  <a href="{{ url_for('custos.novo') }}" class="btn btn-warning text-dark">
+    <i class="bi bi-plus-circle"></i> Registrar Custo
+  </a>
+</div>
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Data</th><th>Talhão</th><th>Categoria</th><th>Descrição</th><th class="text-end">Valor</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for c in custos %}
+          <tr>
+            <td>{{ c.data_custo.strftime('%d/%m/%Y') }}</td>
+            <td><a href="{{ url_for('talhoes.detalhe', id=c.talhao.id) }}">{{ c.talhao.nome }}</a></td>
+            <td><span class="badge bg-secondary">{{ c.categoria }}</span></td>
+            <td class="text-muted small">{{ c.descricao or '—' }}</td>
+            <td class="text-end fw-semibold text-danger">{{ c.valor|moeda }}</td>
+            <td><a href="{{ url_for('custos.editar', id=c.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">Nenhum custo registrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

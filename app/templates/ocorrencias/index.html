@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Pragas e Doenças{% endblock %}
+{% block breadcrumb %}<i class="bi bi-bug-fill"></i> Pragas/Doenças{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Pragas e Doenças</h4>
+  <a href="{{ url_for('ocorrencias.nova') }}" class="btn btn-danger">
+    <i class="bi bi-plus-circle"></i> Registrar Ocorrência
+  </a>
+</div>
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Data</th><th>Talhão</th><th>Tipo</th><th>Nome</th><th>Severidade</th><th>Área (ha)</th><th>Tratamento</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for o in ocorrencias %}
+          <tr>
+            <td>{{ o.data_ocorrencia.strftime('%d/%m/%Y') }}</td>
+            <td><a href="{{ url_for('talhoes.detalhe', id=o.talhao.id) }}">{{ o.talhao.nome }}</a></td>
+            <td>{{ o.tipo }}</td>
+            <td class="fw-semibold">{{ o.nome }}</td>
+            <td>
+              <span class="badge {% if o.severidade == 'Grave' %}bg-danger{% elif o.severidade == 'Moderada' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                {{ o.severidade }}
+              </span>
+            </td>
+            <td>{{ o.area_afetada_ha|numero if o.area_afetada_ha else '—' }}</td>
+            <td class="text-muted small">{{ (o.tratamento_aplicado[:50] + '...') if o.tratamento_aplicado and o.tratamento_aplicado|length > 50 else (o.tratamento_aplicado or '—') }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{{ url_for('ocorrencias.detalhe', id=o.id) }}" class="btn btn-sm btn-outline-danger" title="Ver recomendação"><i class="bi bi-lightbulb"></i></a>
+                <a href="{{ url_for('ocorrencias.editar', id=o.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma ocorrência registrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{% if propriedade %}Editar{% else %}Nova{% endif %} Propriedade{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('propriedades.index') }}" class="text-muted text-decoration-none">Propriedades</a> /
+  {% if propriedade %}Editar{% else %}Nova{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-house-fill text-success"></i>
+        {% if propriedade %}Editar Propriedade{% else %}Nova Propriedade{% endif %}
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome da Propriedade <span class="text-danger">*</span></label>
+            <input type="text" name="nome" class="form-control"
+                   value="{{ propriedade.nome if propriedade else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome do Produtor <span class="text-danger">*</span></label>
+            <input type="text" name="produtor_nome" class="form-control"
+                   value="{{ propriedade.produtor_nome if propriedade else '' }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Localização</label>
+            <input type="text" name="localizacao" class="form-control"
+                   value="{{ propriedade.localizacao or '' if propriedade else '' }}"
+                   placeholder="Cidade, Estado">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Área Total (ha)</label>
+            <input type="number" name="area_total_ha" class="form-control" step="0.01" min="0"
+                   value="{{ propriedade.area_total_ha if propriedade and propriedade.area_total_ha else '' }}">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg"></i> Salvar
+            </button>
+            <a href="{{ url_for('propriedades.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
