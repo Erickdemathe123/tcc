@@ -35,24 +35,28 @@
                    value="{{ talhao.nome if talhao else '' }}" required
                    placeholder="Ex: Talhão A, Lote 01...">
           </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Área (ha) <span class="text-danger">*</span></label>
-              <input type="number" name="area_ha" class="form-control" step="0.01" min="0.01" required
-                     value="{{ talhao.area_ha if talhao else '' }}">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Variedade</label>
-              <select name="variedade" class="form-select">
-                <option value="">Selecione...</option>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Área (ha) <span class="text-danger">*</span></label>
+            <input type="number" name="area_ha" class="form-control" step="0.01" min="0.01" required
+                   value="{{ talhao.area_ha if talhao else '' }}" style="max-width:200px">
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Variedades cultivadas</label>
+            <div class="border rounded p-3" style="background:#f8fafb">
+              <div class="row g-2">
                 {% for v in variedades %}
-                <option value="{{ v }}"
-                  {% if talhao and talhao.variedade == v %}selected{% endif %}>
-                  {{ v }}
-                </option>
+                <div class="col-6 col-md-4 col-lg-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="variedades"
+                           value="{{ v }}" id="var_{{ loop.index }}"
+                           {% if v in variedades_selecionadas %}checked{% endif %}>
+                    <label class="form-check-label small" for="var_{{ loop.index }}">{{ v }}</label>
+                  </div>
+                </div>
                 {% endfor %}
-              </select>
+              </div>
             </div>
+            <div class="form-text">Selecione todas as variedades plantadas neste talhão.</div>
           </div>
           <div class="mb-4">
             <label class="form-label fw-semibold">Data de Plantio</label>

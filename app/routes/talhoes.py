@@ -3,6 +3,7 @@ from datetime import date
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.talhao import Talhao, VARIEDADES
+from app.models.talhao_variedade import TalhaoVariedade
 from app.models.propriedade import Propriedade
 from app.services.indicadores import calcular_indicadores_talhao, historico_producao_por_mes, historico_custos_por_mes
 from app.services.alertas import gerar_alertas_talhao
@@ -34,23 +35,27 @@ def novo():
         if not prop_id or not nome or not area_ha:
             flash('Propriedade, nome do talhão e área são obrigatórios.', 'danger')
             return render_template('talhoes/form.html', talhao=None, propriedades=propriedades,
-                                   variedades=VARIEDADES, propriedade_id_selecionado=prop_id)
+                                   variedades=VARIEDADES, propriedade_id_selecionado=prop_id,
+                                   variedades_selecionadas=[])
 
         data_plantio = _date_or_none(request.form.get('data_plantio'))
         talhao = Talhao(
             propriedade_id=prop_id,
             nome=nome,
             area_ha=area_ha,
-            variedade=request.form.get('variedade', '').strip() or None,
             data_plantio=data_plantio,
         )
         db.session.add(talhao)
+        db.session.flush()
+        for v in request.form.getlist('variedades'):
+            db.session.add(TalhaoVariedade(talhao_id=talhao.id, variedade=v))
         db.session.commit()
         flash(f'Talhão "{talhao.nome}" cadastrado com sucesso!', 'success')
         return redirect(url_for('talhoes.detalhe', id=talhao.id))
 
     return render_template('talhoes/form.html', talhao=None, propriedades=propriedades,
-                           variedades=VARIEDADES, propriedade_id_selecionado=propriedade_id)
+                           variedades=VARIEDADES, propriedade_id_selecionado=propriedade_id,
+                           variedades_selecionadas=[])
 
 
 @bp.route('/<int:id>')
@@ -79,25 +84,31 @@ def editar(id):
     talhao = Talhao.query.get_or_404(id)
     propriedades = Propriedade.query.filter_by(usuario_id=current_user.id).order_by(Propriedade.nome).all()
 
+    variedades_selecionadas = [v.variedade for v in talhao.variedades_list]
+
     if request.method == 'POST':
         nome = request.form.get('nome', '').strip()
         area_ha = _float_or_none(request.form.get('area_ha'))
         if not nome or not area_ha:
             flash('Nome e área são obrigatórios.', 'danger')
             return render_template('talhoes/form.html', talhao=talhao, propriedades=propriedades,
-                                   variedades=VARIEDADES, propriedade_id_selecionado=talhao.propriedade_id)
+                                   variedades=VARIEDADES, propriedade_id_selecionado=talhao.propriedade_id,
+                                   variedades_selecionadas=variedades_selecionadas)
 
         talhao.nome = nome
         talhao.area_ha = area_ha
-        talhao.variedade = request.form.get('variedade', '').strip() or None
         talhao.data_plantio = _date_or_none(request.form.get('data_plantio'))
         talhao.propriedade_id = request.form.get('propriedade_id', type=int) or talhao.propriedade_id
+        TalhaoVariedade.query.filter_by(talhao_id=talhao.id).delete()
+        for v in request.form.getlist('variedades'):
+            db.session.add(TalhaoVariedade(talhao_id=talhao.id, variedade=v))
         db.session.commit()
         flash('Talhão atualizado com sucesso!', 'success')
         return redirect(url_for('talhoes.detalhe', id=talhao.id))
 
     return render_template('talhoes/form.html', talhao=talhao, propriedades=propriedades,
-                           variedades=VARIEDADES, propriedade_id_selecionado=talhao.propriedade_id)
+                           variedades=VARIEDADES, propriedade_id_selecionado=talhao.propriedade_id,
+                           variedades_selecionadas=variedades_selecionadas)
 
 
 @bp.route('/<int:id>/excluir', methods=['POST'])
