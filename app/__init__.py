@@ -14,7 +14,7 @@ def create_app(config_class=Config):
 
     # Registra modelos para o Migrate descobrir
     with app.app_context():
-        from app.models import propriedade, talhao, manejo, ocorrencia, colheita, custo  # noqa
+        from app.models import propriedade, talhao, talhao_variedade, manejo, ocorrencia, colheita, custo  # noqa
         from app.models import usuario  # noqa
 
     @login_manager.user_loader
