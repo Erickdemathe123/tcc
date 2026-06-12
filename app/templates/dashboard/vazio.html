@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Início{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <i class="bi bi-flower1 text-success" style="font-size:4rem;"></i>
+  <h2 class="mt-3 fw-bold">Bem-vindo ao AgroBanana</h2>
+  <p class="text-muted mb-4">Sistema de Apoio à Decisão para Gestão de Bananais</p>
+  <p class="text-muted">Comece cadastrando sua primeira propriedade.</p>
+  <a href="{{ url_for('propriedades.nova') }}" class="btn btn-success btn-lg mt-2">
+    <i class="bi bi-plus-circle"></i> Cadastrar Propriedade
+  </a>
+</div>
+{% endblock %}

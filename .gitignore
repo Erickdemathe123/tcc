@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Ambiente virtual
+venv/
+env/
+.venv/
+.env/
+
+# Variáveis de ambiente
+.env
+.env.local
+
+# Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask
+instance/
+
+# Migrações geradas (manter a pasta, ignorar só o __pycache__)
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Claude Code
+.claude/

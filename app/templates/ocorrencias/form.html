@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{% if ocorrencia %}Editar Ocorrência{% else %}Registrar Ocorrência{% endif %}{% endblock %}
+{% block breadcrumb %}
+  <a href="{{ url_for('ocorrencias.index') }}" class="text-muted text-decoration-none">Ocorrências</a> /
+  {% if ocorrencia %}Editar{% else %}Nova{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div class="card-header bg-white fw-semibold border-0">
+        <i class="bi bi-bug-fill text-danger"></i>
+        {% if ocorrencia %}Editar Praga ou Doença{% else %}Registrar Praga ou Doença{% endif %}
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Talhão <span class="text-danger">*</span></label>
+            <select name="talhao_id" class="form-select" required>
+              <option value="">Selecione o talhão...</option>
+              {% for t in talhoes %}
+              <option value="{{ t.id }}" {% if talhao_id_selecionado == t.id %}selected{% endif %}>
+                {{ t.propriedade.nome }} — {{ t.nome }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Tipo <span class="text-danger">*</span></label>
+              <select name="tipo" class="form-select" required>
+                <option value="">Selecione...</option>
+                {% for t in tipos %}
+                <option value="{{ t }}" {% if ocorrencia and ocorrencia.tipo == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Severidade <span class="text-danger">*</span></label>
+              <select name="severidade" id="sel-severidade" class="form-select" required>
+                <option value="">Selecione...</option>
+                {% for s in severidades %}
+                <option value="{{ s }}" {% if ocorrencia and ocorrencia.severidade == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome da Praga/Doença <span class="text-danger">*</span></label>
+            <input type="text" name="nome" id="inp-nome" class="form-control" list="pragas-lista" required
+                   placeholder="Ex: Sigatoka-negra, Broca-do-rizoma..."
+                   value="{{ ocorrencia.nome if ocorrencia else '' }}">
+            <datalist id="pragas-lista">
+              {% for p in pragas_comuns %}
+              <option value="{{ p }}">
+              {% endfor %}
+            </datalist>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Data da Ocorrência <span class="text-danger">*</span></label>
+              <input type="date" name="data_ocorrencia" class="form-control" required
+                     value="{{ ocorrencia.data_ocorrencia.strftime('%Y-%m-%d') if ocorrencia else (now.strftime('%Y-%m-%d') if now else '') }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Área Afetada (ha)</label>
+              <input type="number" name="area_afetada_ha" class="form-control" step="0.01" min="0"
+                     value="{{ ocorrencia.area_afetada_ha | numero_input if ocorrencia and ocorrencia.area_afetada_ha is not none else '' }}">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Tratamento Aplicado</label>
+            <textarea name="tratamento_aplicado" class="form-control" rows="3"
+                      placeholder="Descreva o tratamento aplicado...">{{ ocorrencia.tratamento_aplicado or '' if ocorrencia else '' }}</textarea>
+          </div>
+
+          <!-- Card de recomendação dinâmica -->
+          <div id="card-recomendacao" class="d-none mb-4">
+            <div class="card border-0" id="rec-card" style="box-shadow:0 1px 4px rgba(0,0,0,.1)">
+              <div class="card-header border-0 fw-semibold" id="rec-header">
+                <i class="bi bi-lightbulb-fill"></i> Recomendação para esta ocorrência
+              </div>
+              <div class="card-body">
+                <p class="small text-muted mb-2" id="rec-descricao"></p>
+                <strong class="small" id="rec-acoes-titulo"></strong>
+                <ol id="rec-acoes" class="mt-1 mb-0 small"></ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-check-lg"></i> Salvar</button>
+            <a href="{{ url_for('ocorrencias.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const RECOMENDACOES = {{ recomendacoes | tojson }};
+
+const inpNome = document.getElementById('inp-nome');
+const selSev  = document.getElementById('sel-severidade');
+const cardBox = document.getElementById('card-recomendacao');
+const recCard = document.getElementById('rec-card');
+const recHeader = document.getElementById('rec-header');
+const recDescricao = document.getElementById('rec-descricao');
+const recAcoesTitulo = document.getElementById('rec-acoes-titulo');
+const recAcoes = document.getElementById('rec-acoes');
+
+const SEV_CLASSES = {
+  'Leve':     { header: 'bg-success bg-opacity-10 text-success',  icon: 'bi-check-circle-fill' },
+  'Moderada': { header: 'bg-warning bg-opacity-10',               icon: 'bi-exclamation-circle-fill' },
+  'Grave':    { header: 'bg-danger  bg-opacity-10 text-danger',   icon: 'bi-exclamation-triangle-fill' },
+};
+
+function atualizarRecomendacao() {
+  const nome = inpNome.value.trim();
+  const sev  = selSev.value;
+  const rec  = RECOMENDACOES[nome] || (nome ? RECOMENDACOES['Outros'] : null);
+
+  if (!rec || !sev) {
+    cardBox.classList.add('d-none');
+    return;
+  }
+
+  const acoes = rec[sev] || [];
+  recDescricao.textContent = rec.descricao || '';
+  recAcoesTitulo.textContent = 'Ações recomendadas — Severidade ' + sev + ':';
+  recAcoes.innerHTML = acoes.map(a => `<li class="mb-1">${a}</li>`).join('');
+
+  const cls = SEV_CLASSES[sev] || SEV_CLASSES['Leve'];
+  recHeader.className = 'card-header border-0 fw-semibold ' + cls.header;
+  recHeader.innerHTML = `<i class="bi ${cls.icon}"></i> Recomendação — ${nome} (${sev})`;
+
+  cardBox.classList.remove('d-none');
+}
+
+inpNome.addEventListener('input', atualizarRecomendacao);
+selSev.addEventListener('change', atualizarRecomendacao);
+
+// Ativar ao carregar a página (modo edição)
+atualizarRecomendacao();
+</script>
+{% endblock %}

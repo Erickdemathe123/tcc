@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Relatórios{% endblock %}
+{% block breadcrumb %}<i class="bi bi-file-earmark-bar-graph-fill"></i> Relatórios{% endblock %}
+
+{% block content %}
+<h4 class="fw-bold mb-4">Relatórios</h4>
+
+{% if propriedades %}
+  {% for prop in propriedades %}
+  <div class="card mb-3" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <div class="card-header bg-white fw-semibold border-0 d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-house-fill text-success"></i> {{ prop.nome }} — {{ prop.produtor_nome }}</span>
+      <a href="{{ url_for('relatorios.propriedade', id=prop.id) }}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-file-earmark-bar-graph"></i> Relatório da Propriedade
+      </a>
+    </div>
+    {% if prop.talhoes %}
+    <div class="card-body pb-2">
+      <div class="row g-2">
+        {% for t in prop.talhoes %}
+        <div class="col-auto">
+          <a href="{{ url_for('relatorios.talhao', id=t.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-file-earmark-text"></i> {{ t.nome }}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="text-center text-muted py-5">
+  <i class="bi bi-file-earmark-bar-graph fs-1"></i>
+  <p class="mt-3">Nenhuma propriedade cadastrada.</p>
+  <a href="{{ url_for('propriedades.nova') }}" class="btn btn-success">Cadastrar Propriedade</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Colheitas{% endblock %}
+{% block breadcrumb %}<i class="bi bi-basket-fill"></i> Colheitas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Colheitas</h4>
+  <a href="{{ url_for('colheitas.nova') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> Registrar Colheita
+  </a>
+</div>
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Data</th><th>Talhão</th><th class="text-end">Caixas</th><th class="text-end">Kg/cx</th><th class="text-end">Peso Total</th><th class="text-end">Preço/cx</th><th class="text-end">Receita</th><th>Destino</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for c in colheitas %}
+          <tr>
+            <td>{{ c.data_colheita.strftime('%d/%m/%Y') }}</td>
+            <td><a href="{{ url_for('talhoes.detalhe', id=c.talhao.id) }}">{{ c.talhao.nome }}</a></td>
+            <td class="text-end">{{ c.quantidade_caixas or '—' }}</td>
+            <td class="text-end">{{ c.peso_por_caixa|numero if c.peso_por_caixa else '—' }}</td>
+            <td class="text-end">{{ c.peso_total|numero if c.peso_total else '—' }}</td>
+            <td class="text-end">{{ c.preco_por_caixa|moeda if c.preco_por_caixa else '—' }}</td>
+            <td class="text-end fw-semibold text-success">{{ c.receita_total|moeda }}</td>
+            <td>{{ c.destino or '—' }}</td>
+            <td><a href="{{ url_for('colheitas.editar', id=c.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">Nenhuma colheita registrada.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

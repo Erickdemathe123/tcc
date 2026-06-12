@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Manejos{% endblock %}
+{% block breadcrumb %}<i class="bi bi-tools"></i> Manejos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Manejos Agrícolas</h4>
+  <a href="{{ url_for('manejos.novo') }}" class="btn btn-success">
+    <i class="bi bi-plus-circle"></i> Registrar Manejo
+  </a>
+</div>
+<div class="card" style="border:none;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Data</th><th>Propriedade</th><th>Talhão</th><th>Tipo</th><th>Responsável</th><th>Descrição</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for m in manejos %}
+          <tr>
+            <td>{{ m.data_manejo.strftime('%d/%m/%Y') }}</td>
+            <td class="text-muted small">{{ m.talhao.propriedade.nome }}</td>
+            <td><a href="{{ url_for('talhoes.detalhe', id=m.talhao.id) }}">{{ m.talhao.nome }}</a></td>
+            <td><span class="badge bg-secondary">{{ m.tipo }}</span></td>
+            <td>{{ m.responsavel or '—' }}</td>
+            <td class="text-muted small">{{ m.descricao or '—' }}</td>
+            <td><a href="{{ url_for('manejos.editar', id=m.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">Nenhum manejo registrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
