@@ -48,14 +48,12 @@
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Nome da Praga/Doença <span class="text-danger">*</span></label>
-            <input type="text" name="nome" id="inp-nome" class="form-control" list="pragas-lista" required
-                   placeholder="Ex: Sigatoka-negra, Broca-do-rizoma..."
-                   value="{{ ocorrencia.nome if ocorrencia else '' }}">
-            <datalist id="pragas-lista">
+            <select name="nome" id="inp-nome" class="form-select" required>
+              <option value="">Selecione a praga ou doença...</option>
               {% for p in pragas_comuns %}
-              <option value="{{ p }}">
+              <option value="{{ p }}" {% if ocorrencia and ocorrencia.nome == p %}selected{% endif %}>{{ p }}</option>
               {% endfor %}
-            </datalist>
+            </select>
           </div>
           <div class="row">
             <div class="col-md-6 mb-3">
