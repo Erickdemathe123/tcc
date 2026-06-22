@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: agrobanana
+      POSTGRES_USER: agrobanana
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-agrobanana}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrobanana"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://agrobanana:${DB_PASSWORD:-agrobanana}@db:5432/agrobanana
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

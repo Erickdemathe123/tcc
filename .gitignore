@@ -45,5 +45,11 @@ desktop.ini
 # Logs
 *.log
 
+# Testes e cobertura
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
 # Claude Code
 .claude/
