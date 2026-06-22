@@ -102,6 +102,7 @@
           <i class="bi bi-calendar3"></i>
           {{ now.strftime('%d de %B de %Y') if now else '' }}
         </div>
+        {% if current_user.is_authenticated %}
         <div class="d-flex align-items-center gap-2">
           <div class="user-avatar">
             <i class="bi bi-person-fill"></i>
@@ -119,6 +120,7 @@
             <i class="bi bi-box-arrow-right"></i>
           </a>
         </div>
+        {% endif %}
       </div>
     </div>
 
