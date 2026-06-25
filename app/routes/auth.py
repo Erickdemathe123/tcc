@@ -108,11 +108,10 @@ def esqueci_senha():
             """
             try:
                 mail.send(msg)
+                return redirect(url_for('auth.login'))
             except Exception as e:
                 current_app.logger.error(f'Erro ao enviar email de reset: {e}')
-                if current_app.debug:
-                    flash(f'Erro ao enviar e-mail: {e}', 'danger')
-                    return render_template('auth/esqueci_senha.html')
+                return render_template('auth/esqueci_senha.html', reset_link=link, nome=usuario.nome)
 
         return redirect(url_for('auth.login'))
 

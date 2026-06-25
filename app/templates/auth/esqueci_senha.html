@@ -97,6 +97,20 @@
       {% endif %}
     {% endwith %}
 
+    {% if reset_link %}
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:.875rem;padding:1.25rem;margin-bottom:1.25rem;">
+        <p style="font-size:.88rem;color:#166534;margin-bottom:.75rem;">
+          <i class="bi bi-exclamation-circle-fill me-1"></i>
+          Não foi possível enviar o e-mail, mas você pode usar o link abaixo para redefinir sua senha:
+        </p>
+        <a href="{{ reset_link }}" class="btn btn-primary-green" style="display:block;text-align:center;">
+          <i class="bi bi-key-fill me-1"></i> Redefinir minha senha
+        </a>
+        <p style="font-size:.78rem;color:#6b7280;margin-top:.75rem;margin-bottom:0;word-break:break-all;">
+          {{ reset_link }}
+        </p>
+      </div>
+    {% else %}
     <form method="POST" action="{{ url_for('auth.esqueci_senha') }}" novalidate>
       <div class="mb-4">
         <label class="form-label" for="email">E-mail cadastrado</label>
@@ -111,6 +125,7 @@
         <i class="bi bi-send-fill me-1"></i> Enviar link de redefinição
       </button>
     </form>
+    {% endif %}
 
     <hr class="my-4">
 

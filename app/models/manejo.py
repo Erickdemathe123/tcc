@@ -2,14 +2,20 @@ from datetime import datetime
 from app.extensions import db
 
 TIPOS_MANEJO = [
-    'Capina',
+    'Plantio de Mudas',
+    'Retirada de Mudas',
     'Adubação',
     'Irrigação',
-    'Poda',
-    'Tratamento Fitossanitário',
-    'Desbaste',
+    'Desbrotar/Desbaste',
+    'Desfolha',
+    'Amarração/Escoramento',
     'Ensacamento',
-    'Colheita de Mudas',
+    'Passar Herbicida',
+    'Passar Inseticida',
+    'Passar Fungicida',
+    'Passar Nematicida',
+    'Passar Adubo Líquido',
+    'Tratamento Fitossanitário',
     'Outros',
 ]
 
