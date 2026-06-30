@@ -66,9 +66,16 @@ def create_app(config_class=Config):
 
     from datetime import datetime
 
+    _MESES_PT = [
+        '', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+    ]
+
     @app.context_processor
     def injetar_variaveis():
-        return {'now': datetime.now()}
+        now = datetime.now()
+        data_pt = f"{now.day} de {_MESES_PT[now.month]} de {now.year}"
+        return {'now': now, 'data_hoje_pt': data_pt}
 
     @app.errorhandler(404)
     def pagina_nao_encontrada(e):

@@ -100,7 +100,7 @@
         </button>
         <div class="topbar-date">
           <i class="bi bi-calendar3"></i>
-          {{ now.strftime('%d de %B de %Y') if now else '' }}
+          {{ data_hoje_pt }}
         </div>
         {% if current_user.is_authenticated %}
         <div class="d-flex align-items-center gap-2">
